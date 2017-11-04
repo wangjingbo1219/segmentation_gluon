@@ -97,7 +97,8 @@ class ToNDArray():
     def __call__(self, img, lbl):
         img = mx.nd.array(img)
         img = img / 255
-
+        lbl = np.array(lbl)
+        lbl[lbl == 255] = 0
         lbl = mx.nd.array(lbl)
 
         return img, lbl
@@ -164,6 +165,14 @@ class UnitResize:
         return img.resize((w, h), Image.BILINEAR), lbl.resize((w, h))
 
 
+voc_train = Compose([
+    RandomCrop(),
+    Resize(cfg.size, cfg.size),
+    RandomHorizontalFlip(),
+    ToNDArray(),
+    Normalize(cfg.mean, cfg.std)
+])
+
 cityscapes_train = Compose([
     RandomCrop(crop_size=cfg.crop),
     Resize(cfg.size, cfg.size),
@@ -178,17 +187,4 @@ cityscapes_val = Compose([
     ToNDArray(),
     Normalize(cfg.mean, cfg.std),
 
-])
-
-cityscapes_test = Compose([
-    UnitResize(32),
-    ToNDArray(),
-    Normalize(cfg.mean, cfg.std),
-
-])
-
-cityscapes_t = Compose([
-    Resize(cfg.size * 2, cfg.size),
-    ToNDArray(),
-    Normalize(cfg.mean, cfg.std),
 ])

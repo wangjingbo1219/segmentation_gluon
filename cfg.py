@@ -17,7 +17,7 @@ coco_classes = ['car', 'bus', 'truck']
 coco_cat_ids = [3, 6, 8]
 coco_map = dict(zip(coco_cat_ids, range(1, len(coco_cat_ids) + 1)))
 
-voc_root = os.path.join(home, 'data', 'VOCdevkit')
+voc_root = os.path.join(home, 'data', 'SegmentationClassGT')
 ade_root = os.path.join(home, 'data', 'scene_parsing')
 
 cityscapes_root = os.path.join(home, 'data', 'cityscapes')

@@ -16,8 +16,8 @@ import time
 nets = {'LKM': LKM, 'DeepLab': DeepLab}
 
 
-def train(name, train_loader, ctx, load_checkpoint, learning_rate, num_epochs, weight_decay, checkpoint,
-          dropbox):
+def train(name, train_loader, ctx, load_checkpoint, learning_rate, num_epochs,
+          weight_decay, checkpoint, dropbox):
     records = {'losses': []}
     criterion = gluon.loss.SoftmaxCrossEntropyLoss()
     save_root = os.path.join('save', name)
@@ -32,7 +32,8 @@ def train(name, train_loader, ctx, load_checkpoint, learning_rate, num_epochs, w
             net = nets[name](pretrained=False)
             net.load_params(os.path.join(save_root, 'weights'), ctx=cfg.ctx)
             trainer = gluon.Trainer(net.collect_params(), 'adam',
-                                    {'learning_rate': learning_rate, 'wd': weight_decay})
+                                    {'learning_rate': learning_rate,
+                                     'wd': weight_decay})
             trainer.load_states(os.path.join(save_root, 'trainer'))
             with open(os.path.join(save_root, 'records'), 'rb') as f:
                 records = pickle.load(f)
@@ -43,9 +44,12 @@ def train(name, train_loader, ctx, load_checkpoint, learning_rate, num_epochs, w
 
     if not loaded:
         net = nets[name](pretrained=True)
-        net.collect_params().initialize(mx.initializer.Xavier(magnitude=2.0), ctx=cfg.ctx)
+        net.collect_params().initialize(mx.initializer.MSRAPrelu(),
+                                        ctx=cfg.ctx)
         net.collect_params().reset_ctx(cfg.ctx)
-        trainer = gluon.Trainer(net.collect_params(), 'adam', {'learning_rate': learning_rate, 'wd': weight_decay})
+        trainer = gluon.Trainer(net.collect_params(), 'adam', {
+                                'learning_rate': learning_rate,
+                                'wd': weight_decay})
 
     net.hybridize()
 
@@ -88,13 +92,15 @@ def train(name, train_loader, ctx, load_checkpoint, learning_rate, num_epochs, w
             if dropbox:
                 call(['cp', '-r', save_root,
                       os.path.join(cfg.home, 'Dropbox')])
-            print('Finish saving checkpoint', end='')
+            print('\rFinish saving checkpoint', end='')
     print('\nFinish training')
 
 
 def main():
-    train_dataset = CityScapes(cfg.cityscapes_root, 'train', augment.cityscapes_train)
-    train_loader = gluon.data.DataLoader(train_dataset, batch_size=8, shuffle=True)
+    train_dataset = CityScapes(
+        cfg.cityscapes_root, 'train', augment.cityscapes_train)
+    train_loader = gluon.data.DataLoader(
+        train_dataset, batch_size=8, shuffle=True)
     train('LKM', train_loader, cfg.ctx, True, 0.00015, 100, 0.0001, 1, True)
 
 
