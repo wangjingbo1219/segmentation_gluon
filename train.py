@@ -14,17 +14,41 @@ from model.deeplab import DeepLab
 import time
 import argparse
 
+
+def parse_arg():
+    parser = argparse.ArgumentParser(description='training segmentation CNN with gluon')
+
+    # network name
+    parser.add_argument('--name', help='name of the network', dest='name', type=str, default='LKM_512_cityscapes')
+    # use dropbox
+    parser.add_argument('--dropbox', help='copy save files to dropbox', dest='dropbox', type=bool, action='store_true')
+    # learning rate
+    parser.add_argument('--learning_rate', help='learning rate', dest='lr', type=float, default=0.00025)
+    # weight decay
+    parser.add_argument('--weight_decay', help='weight decay', dest='wd', type=float, default=0.0001)
+    # batch size
+    parser.add_argument('--batch_size', help='batch size', dest='batch_size', type=int, default=8)
+    # num epoch
+    parser.add_argument('--num_epoch', help='number of epoch', dest='num_epoch', type=int, default=60)
+    # checkpoint
+    parser.add_argument('--checkpoint', help='period of epochs to checkpoint', dest='checkpoint', type=int, default=1)
+
+    args = parser.parse_args()
+    return args
+
+
 nets = {'LKM': LKM, 'DeepLab': DeepLab}
+args = parse_arg()
 
 
 def train(name, train_loader, ctx, load_checkpoint, learning_rate, num_epochs,
-          weight_decay, checkpoint, dropbox):
+          weight_decay, checkpoint):
     records = {'losses': []}
     criterion = gluon.loss.SoftmaxCrossEntropyLoss(axis=1)
     save_root = os.path.join('save', name)
     if not os.path.exists(save_root):
         call(['mkdir', '-p', save_root])
-        
+
     loaded = False
     if load_checkpoint:
         save_files = set(os.listdir(save_root))
@@ -90,7 +114,7 @@ def train(name, train_loader, ctx, load_checkpoint, learning_rate, num_epochs,
             trainer.save_states(os.path.join(save_root, 'trainer'))
             with open(os.path.join(save_root, 'records'), 'wb') as f:
                 pickle.dump(records, f)
-            if dropbox:
+            if args.dropbox:
                 call(['cp', '-r', save_root,
                       os.path.join(cfg.home, 'Dropbox')])
             print('\rFinish saving checkpoint', end='')
@@ -101,8 +125,8 @@ def main():
     train_dataset = CityScapes(
         cfg.cityscapes_root, 'train', augment.cityscapes_train)
     train_loader = gluon.data.DataLoader(
-        train_dataset, batch_size=8, shuffle=True)
-    train('LKM_512_Cityscapes', train_loader, cfg.ctx, True, 0.00025, 60, 0.0001, 1, True)
+        train_dataset, batch_size=args.batch_size, shuffle=True)
+    train(args.name, train_loader, cfg.ctx, True, args.lr, args.num_epoch, args.wd, args.checkpoint)
 
 
 if __name__ == '__main__':
