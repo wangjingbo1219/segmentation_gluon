@@ -127,41 +127,54 @@ class Compose:
 
 
 class RandomCrop:
-    def __init__(self, crop_size=None, scale=None):
+    def __init__(self, crop_w=None, crop_h=None):
         # assert min_scale <= max_scale
-
-        self.crop_size = crop_size
-        self.scale = scale
-        # self.min_scale = min_scale
-        # self.max_scale = max_scale
+        self.crop_w = crop_w
+        self.crop_h = crop_h
 
     def __call__(self, img, lbl):
-        if self.crop_size:
-            crop = self.crop_size
+        if self.crop_w and self.crop_h:
+            crop_w = self.crop_w
+            crop_h = self.crop_h
         else:
-            crop = min(img.size)
-        if self.scale:
-            factor = random.uniform(self.scale, 1.0)
-            crop = int(round(crop * factor))
+            crop_w = min(img.size)
+            crop_h = crop_w
 
-        x = random.randint(0, img.size[0] - crop)
-        y = random.randint(0, img.size[1] - crop)
+        x = random.randint(0, img.size[0] - crop_w)
+        y = random.randint(0, img.size[1] - crop_h)
 
-        img = img.crop((x, y, x + crop, y + crop))
-        lbl = lbl.crop((x, y, x + crop, y + crop))
+        img = img.crop((x, y, x + crop_w, y + crop_h))
+        lbl = lbl.crop((x, y, x + crop_w, y + crop_h))
         return img, lbl
 
 
 class UnitResize:
-    def __init__(self, unit):
+    def __init__(self, unit, size=None):
+        if size:
+            assert size % unit == 0
+
         self.unit = unit
+        self.size = size
 
     def __call__(self, img, lbl):
         w, h = img.size
-        if w % self.unit == 0 and h % self.unit == 0:
-            return img, lbl
-        w = int(round(w / self.unit) * self.unit)
-        h = int(round(h / self.unit) * self.unit)
+        if w < h:
+            short = 'w'
+            size = w
+        else:
+            short = 'h'
+            size = h
+
+        if self.size:
+            size = self.size
+
+        if short == 'w':
+            h = int(round((size / w) * h / self.unit)) * self.unit
+            w = size
+        else:
+            w = int(round((size / h) * w / self.unit)) * self.unit
+            h = size
+
         return img.resize((w, h), Image.BILINEAR), lbl.resize((w, h))
 
 
@@ -173,9 +186,15 @@ voc_train = Compose([
     Normalize(cfg.mean, cfg.std)
 ])
 
+voc_val = Compose([
+    UnitResize(32, 480),
+    ToNDArray(),
+    Normalize(cfg.mean, cfg.std)
+])
+
 cityscapes_train = Compose([
-    RandomCrop(crop_size=cfg.crop),
-    Resize(cfg.size, cfg.size),
+    Resize(cfg.resize_w, cfg.resize_h),
+    RandomCrop(cfg.size, cfg.size),
     RandomHorizontalFlip(),
     ToNDArray(),
     Normalize(cfg.mean, cfg.std),
@@ -186,5 +205,4 @@ cityscapes_val = Compose([
     Resize(960, 480),
     ToNDArray(),
     Normalize(cfg.mean, cfg.std),
-
 ])

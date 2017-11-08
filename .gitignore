@@ -103,4 +103,5 @@ ENV/
 # misc
 .DS_Store
 .vscode/
+.idea/
 save/

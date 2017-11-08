@@ -38,7 +38,7 @@ class BoundaryRefineModule(nn.HybridBlock):
 
 
 class LKM(gluon.HybridBlock):
-    def __init__(self, pretrained=False, base_prefix=''):
+    def __init__(self, pretrained=False, large_kernel=15, base_prefix=''):
         super(LKM, self).__init__()
         with self.name_scope():
             resnet = gluon.model_zoo.vision.resnet101_v1(pretrained=pretrained, prefix=base_prefix).features
@@ -49,10 +49,10 @@ class LKM(gluon.HybridBlock):
             self.layer3 = resnet[6]
             self.layer4 = resnet[7]
 
-            self.gcn_4 = GlobalConvolutionalNetwork(cfg.n_class, 15)
-            self.gcn_8 = GlobalConvolutionalNetwork(cfg.n_class, 15)
-            self.gcn_16 = GlobalConvolutionalNetwork(cfg.n_class, 15)
-            self.gcn_32 = GlobalConvolutionalNetwork(cfg.n_class, 15)
+            self.gcn_4 = GlobalConvolutionalNetwork(cfg.n_class, large_kernel)
+            self.gcn_8 = GlobalConvolutionalNetwork(cfg.n_class, large_kernel)
+            self.gcn_16 = GlobalConvolutionalNetwork(cfg.n_class, large_kernel)
+            self.gcn_32 = GlobalConvolutionalNetwork(cfg.n_class, large_kernel)
 
             self.br_1 = BoundaryRefineModule(cfg.n_class)
             self.br_2 = BoundaryRefineModule(cfg.n_class)
