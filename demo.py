@@ -7,7 +7,7 @@ from model.lkm import LKM
 import os
 from data.voc_dataset import VOCDataset
 import cfg
-
+import mxnet.autograd as ag
 resizer = augment.UnitResize(32, 480)
 
 
@@ -21,23 +21,23 @@ def demo(net, dataset, m):
 
         img_, lbl_ = resizer(img, lbl)
 
-        # fig = plt.figure()
-        # fig.add_subplot(1, 3, 1)
-        # plt.imshow(img_)
-        # fig.add_subplot(1, 3, 2)
-        # plt.imshow(lbl_)
+        fig = plt.figure()
+        fig.add_subplot(1, 3, 1)
+        plt.imshow(img_)
+        fig.add_subplot(1, 3, 2)
+        plt.imshow(lbl_)
 
         img_, lbl_ = augment.voc_val(img, lbl)
         img_ = mx.nd.expand_dims(img_, 0)
+        with ag.predict_mode():
+            pred = net(img_)
+        pred = mx.nd.argmax(pred, 1).asnumpy().squeeze()
+        pred = pred.astype(np.uint8)
 
-        # pred = net(img_)
-        # pred = mx.nd.argmax(pred, 1).asnumpy().squeeze()
-        # pred = pred.astype(np.uint8)
-        #
-        # pred = Image.fromarray(pred)
-        # fig.add_subplot(1, 3, 3)
-        # plt.imshow(pred)
-        # plt.show()
+        pred = Image.fromarray(pred)
+        fig.add_subplot(1, 3, 3)
+        plt.imshow(pred)
+        plt.show()
 
 
 def main():

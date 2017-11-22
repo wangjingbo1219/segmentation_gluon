@@ -90,15 +90,16 @@ class Resize:
         self.h = h
 
     def __call__(self, img, lbl):
-        return img.resize((self.w, self.h), Image.BILINEAR), lbl.resize((self.w, self.h))
+        return img.resize((self.w, self.h), Image.BILINEAR), lbl.resize(
+            (self.w, self.h))
 
 
 class ToNDArray():
     def __call__(self, img, lbl):
-        img = mx.nd.array(img)
+        img = np.array(img).astype(np.float32)
+        img = mx.ndarray.array(img)
         img = img / 255
-        lbl = np.array(lbl)
-        lbl[lbl == 255] = 0
+        lbl = np.array(lbl).astype(np.uint8)
         lbl = mx.nd.array(lbl)
 
         return img, lbl
@@ -110,6 +111,7 @@ class Normalize:
         self.std = mx.nd.array(std)
 
     def __call__(self, img, lbl):
+
         img = mx.image.color_normalize(img, self.mean, self.std)
         img = mx.nd.transpose(img, (2, 0, 1))
 
@@ -123,6 +125,7 @@ class Compose:
     def __call__(self, img, lbl):
         for t in self.trans:
             img, lbl = t(img, lbl)
+
         return img, lbl
 
 
@@ -182,15 +185,14 @@ voc_train = Compose([
     RandomCrop(),
     Resize(cfg.size, cfg.size),
     RandomHorizontalFlip(),
-    ToNDArray(),
+    # ToNDArray(),
     Normalize(cfg.mean, cfg.std)
 ])
 
-voc_val = Compose([
-    UnitResize(32, 480),
-    ToNDArray(),
-    Normalize(cfg.mean, cfg.std)
-])
+voc_val = Compose(
+    [UnitResize(32, 480),
+     ToNDArray(),
+     Normalize(cfg.mean, cfg.std)])
 
 cityscapes_train = Compose([
     Resize(cfg.resize_w, cfg.resize_h),
@@ -198,7 +200,6 @@ cityscapes_train = Compose([
     RandomHorizontalFlip(),
     ToNDArray(),
     Normalize(cfg.mean, cfg.std),
-
 ])
 
 cityscapes_val = Compose([

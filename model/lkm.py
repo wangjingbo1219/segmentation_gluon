@@ -11,11 +11,13 @@ class GlobalConvolutionalNetwork(nn.HybridBlock):
         pad = k // 2
         with self.name_scope():
             self.left = nn.HybridSequential()
-            self.left.add(nn.Conv2D(channels, kernel_size=(k, 1), padding=(pad, 0)),
-                          nn.Conv2D(channels, kernel_size=(1, k), padding=(0, pad)))
+            self.left.add(
+                nn.Conv2D(channels, kernel_size=(k, 1), padding=(pad, 0)),
+                nn.Conv2D(channels, kernel_size=(1, k), padding=(0, pad)))
             self.right = nn.HybridSequential()
-            self.right.add(nn.Conv2D(channels, kernel_size=(1, k), padding=(0, pad)),
-                           nn.Conv2D(channels, kernel_size=(k, 1), padding=(pad, 0)))
+            self.right.add(
+                nn.Conv2D(channels, kernel_size=(1, k), padding=(0, pad)),
+                nn.Conv2D(channels, kernel_size=(k, 1), padding=(pad, 0)))
 
     def hybrid_forward(self, F, x):
         return self.left(x) + self.right(x)
@@ -30,8 +32,7 @@ class BoundaryRefineModule(nn.HybridBlock):
                 nn.Conv2D(channels, kernel_size=3, padding=1),
                 nn.BatchNorm(),
                 nn.Activation('relu'),
-                nn.Conv2D(channels, kernel_size=3, padding=1)
-            )
+                nn.Conv2D(channels, kernel_size=3, padding=1))
 
     def hybrid_forward(self, F, x):
         return x + self.layer(x)
@@ -41,7 +42,8 @@ class LKM(gluon.HybridBlock):
     def __init__(self, pretrained=False, large_kernel=15, base_prefix=''):
         super(LKM, self).__init__()
         with self.name_scope():
-            resnet = gluon.model_zoo.vision.resnet101_v1(pretrained=pretrained, prefix=base_prefix).features
+            resnet = gluon.model_zoo.vision.resnet101_v1(
+                pretrained=pretrained, prefix=base_prefix).features
             self.layer0 = nn.HybridSequential()
             self.layer0.add(*resnet[0:4])
             self.layer1 = resnet[4]
@@ -102,7 +104,8 @@ class LKM(gluon.HybridBlock):
 
 def lkm_test():
     net = LKM(pretrained=True)
-    net.collect_params().initialize(init=mx.initializer.Xavier(magnitude=2.0), ctx=cfg.ctx)
+    net.collect_params().initialize(
+        init=mx.initializer.Xavier(magnitude=2.0), ctx=cfg.ctx)
     x = nd.random_uniform(shape=(2, 3, 512, 512))
     y = net(x)
     print(y)

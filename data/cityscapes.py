@@ -14,13 +14,15 @@ class CityScapes(Dataset):
 
         self.img_paths = []
 
-        self._img = os.path.join(
-            root, 'leftImg8bit', split, '{}_leftImg8bit.png')
-        self._lbl = os.path.join(
-            root, 'gtFine', split, '{}_gtFine_labelIds.png')
+        self._img = os.path.join(root, 'leftImg8bit', split,
+                                 '{}_leftImg8bit.png')
+        self._lbl = os.path.join(root, 'gtFine', split,
+                                 '{}_gtFine_labelIds.png')
 
-        cities = [city for city in os.listdir(
-            self.root) if os.path.isdir(os.path.join(self.root, city))]
+        cities = [
+            city for city in os.listdir(self.root)
+            if os.path.isdir(os.path.join(self.root, city))
+        ]
 
         for city in cities:
             for img in os.listdir(os.path.join(self.root, city)):
@@ -33,11 +35,11 @@ class CityScapes(Dataset):
     def __getitem__(self, idx):
         img_path, lbl_path = self._img.format(
             self.img_paths[idx]), self._lbl.format(self.img_paths[idx])
+
         img = Image.open(img_path)
         lbl = Image.open(lbl_path)
 
         img, lbl = self.transform(img, lbl)
-
         return img, lbl
 
 
